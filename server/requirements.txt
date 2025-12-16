@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pymongo
+apscheduler
+httpx
+requests
+beautifulsoup4
+pandas
+openpyxl
+python-jose[cryptography]
+passlib[argon2]
+python-multipart
+selenium
+webdriver-manager
+python-dotenv

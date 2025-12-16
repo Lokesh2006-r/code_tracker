@@ -1,0 +1,29 @@
+# General
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Node.js / Client
+node_modules/
+client/node_modules/
+client/dist/
+client/build/
+client/.env
+client/.env.local
+
+# Python / Server
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+server/venv/
+server/.venv/
+server/env/
+server/.env
+
+# Local logs
+*.log
+server_final_v*.log
