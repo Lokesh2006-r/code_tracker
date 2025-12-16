@@ -125,7 +125,7 @@ const StudentProfile = () => {
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const res = await API.get(`api/students/${regNo}`);
+                const res = await API.get(`/students/${regNo}`);
                 setStudent(res.data);
             } catch (err) {
                 console.error("Failed to fetch student", err);
@@ -158,7 +158,7 @@ const StudentProfile = () => {
                                 onClick={async () => {
                                     setLoading(true);
                                     try {
-                                        const res = await API.post(`api/students/${student.reg_no}/refresh`);
+                                        const res = await API.post(`/students/${student.reg_no}/refresh`);
                                         setStudent(res.data);
                                     } catch (err) {
                                         alert("Failed to refresh stats");

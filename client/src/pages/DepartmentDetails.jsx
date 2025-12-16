@@ -66,7 +66,7 @@ const DepartmentDetails = () => {
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                const res = await API.get(`api/students/?department=${deptName}`);
+                const res = await API.get(`/students/?department=${deptName}`);
                 setStudents(res.data);
             } catch (err) {
                 console.error("Failed to fetch department students", err);
@@ -81,7 +81,7 @@ const DepartmentDetails = () => {
         if (!window.confirm(`Are you sure you want to delete student ${regNo}?`)) return;
 
         try {
-            await API.delete(`api/students/${regNo}`);
+            await API.delete(`/students/${regNo}`);
             setStudents(prev => prev.filter(s => s.reg_no !== regNo));
         } catch (err) {
             alert("Failed to delete student");
@@ -144,7 +144,7 @@ const DepartmentDetails = () => {
                 onAdd={() => {
                     // Refresh list
                     const fetchStudents = async () => {
-                        const res = await API.get(`api/students/?department=${deptName}`);
+                        const res = await API.get(`/students/?department=${deptName}`);
                         setStudents(res.data);
                     };
                     fetchStudents();
