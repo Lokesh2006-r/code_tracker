@@ -4,9 +4,9 @@ import { NavLink } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
 
-const NavItem = ({ to, icon: Icon, label }) => {
+const NavItem = ({ to, icon: Icon, label, onClick }) => {
     return (
-        <NavLink to={to} className={({ isActive }) => clsx(
+        <NavLink to={to} onClick={onClick} className={({ isActive }) => clsx(
             "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
             isActive ? "text-black bg-white shadow-lg shadow-white/10" : "text-zinc-400 hover:text-white hover:bg-white/5"
         )}>
@@ -28,26 +28,34 @@ const NavItem = ({ to, icon: Icon, label }) => {
     );
 };
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
     return (
-        <aside className="w-72 glass-panel h-screen flex flex-col p-6 z-20 border-r border-white/10 bg-black/40">
-            <div className="flex items-center gap-3 mb-10 px-2">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-white to-zinc-500 flex items-center justify-center shadow-lg shadow-white/10">
-                    <Code2 size={24} className="text-black" />
+        <aside className="w-72 glass-panel h-screen flex flex-col p-6 z-20 border-r border-white/10 bg-black text-white">
+            <div className="flex items-center justify-between gap-3 mb-10 px-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-white to-zinc-500 flex items-center justify-center shadow-lg shadow-white/10">
+                        <Code2 size={24} className="text-black" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+                            CodeTrack
+                        </h1>
+                        <p className="text-xs text-zinc-500 font-medium">Faculty Dashboard</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
-                        CodeTrack
-                    </h1>
-                    <p className="text-xs text-zinc-500 font-medium">Faculty Dashboard</p>
-                </div>
+                {/* Mobile Close Button */}
+                {onClose && (
+                    <button onClick={onClose} className="md:hidden p-2 text-zinc-400 hover:text-white">
+                        <LogOut className="rotate-180" size={20} />
+                    </button>
+                )}
             </div>
 
             <nav className="flex-1 space-y-2">
-                <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-                <NavItem to="/department" icon={Users} label="Departments" />
-                <NavItem to="/students" icon={GraduationCap} label="Students" />
-                <NavItem to="/export" icon={FileSpreadsheet} label="Export Data" />
+                <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={onClose} />
+                <NavItem to="/department" icon={Users} label="Departments" onClick={onClose} />
+                <NavItem to="/students" icon={GraduationCap} label="Students" onClick={onClose} />
+                <NavItem to="/export" icon={FileSpreadsheet} label="Export Data" onClick={onClose} />
             </nav>
 
             <div className="pt-6 border-t border-white/10">
