@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileSpreadsheet, Download, Filter, CheckCircle } from 'lucide-react';
-import axios from 'axios';
+// import axios from 'axios';
+import API from "../api";
 
 const ExportPage = () => {
     const [filters, setFilters] = useState({
@@ -29,10 +30,18 @@ const ExportPage = () => {
                 params.contest_date = filters.contestDate;
             }
 
-            const response = await axios.get('http://localhost:8000/api/export/download', {
-                params,
-                responseType: 'blob' // Important for files
-            });
+            // const response = await axios.get('http://localhost:8000/api/export/download', {
+            //     params,
+            //     responseType: 'blob' // Important for files
+            // });
+            const response = await API.get(
+                '/export/download',
+                {
+                    params,
+                    responseType: 'blob'
+                }
+            );
+
 
             // Create download link
             const url = window.URL.createObjectURL(new Blob([response.data]));
