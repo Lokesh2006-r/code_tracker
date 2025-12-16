@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Code, Trophy, Star, TrendingUp, MapPin } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import axios from 'axios';
+import API from "../api";
 
 const CircularProgress = ({ value, total, color, label }) => {
     const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
@@ -125,7 +125,7 @@ const StudentProfile = () => {
     useEffect(() => {
         const fetchStudent = async () => {
             try {
-                const res = await axios.get(`http://localhost:8000/api/students/${regNo}`);
+                const res = await API.get(`api/students/${regNo}`);
                 setStudent(res.data);
             } catch (err) {
                 console.error("Failed to fetch student", err);
@@ -158,7 +158,7 @@ const StudentProfile = () => {
                                 onClick={async () => {
                                     setLoading(true);
                                     try {
-                                        const res = await axios.post(`http://localhost:8000/api/students/${student.reg_no}/refresh`);
+                                        const res = await API.post(`api/students/${student.reg_no}/refresh`);
                                         setStudent(res.data);
                                     } catch (err) {
                                         alert("Failed to refresh stats");

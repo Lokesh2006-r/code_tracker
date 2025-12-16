@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Code2, Loader2, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import API from "../api";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Login = () => {
             params.append('username', formData.username);
             params.append('password', formData.password);
 
-            const res = await axios.post('http://localhost:8000/token', params);
+            const res = await API.post('token', params);
             localStorage.setItem('token', res.data.access_token);
             navigate('/dashboard');
             // Force reload to update app state (simple auth)
