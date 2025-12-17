@@ -66,7 +66,7 @@ const DepartmentDetails = () => {
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                const res = await API.get(`/students/?department=${deptName}`);
+                const res = await API.get(`/api/students/?department=${deptName}`);
                 setStudents(res.data);
             } catch (err) {
                 console.error("Failed to fetch department students", err);
@@ -144,7 +144,7 @@ const DepartmentDetails = () => {
                 onAdd={() => {
                     // Refresh list
                     const fetchStudents = async () => {
-                        const res = await API.get(`/students/?department=${deptName}`);
+                        const res = await API.get(`/api/students/?department=${deptName}`);
                         setStudents(res.data);
                     };
                     fetchStudents();

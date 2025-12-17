@@ -54,7 +54,7 @@ const Dashboard = () => {
         // Fetch Dashboard Data
         const fetchStats = async () => {
             try {
-                const res = await API.get('/dashboard/stats');
+                const res = await API.get('/api/dashboard/stats');
                 setStats(res.data);
             } catch (e) {
                 console.error("Failed to fetch dashboard stats");

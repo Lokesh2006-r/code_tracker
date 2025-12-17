@@ -35,7 +35,7 @@ const ExportPage = () => {
             //     responseType: 'blob' // Important for files
             // });
             const response = await API.get(
-                '/export/download',
+                '/api/export/download',
                 {
                     params,
                     responseType: 'blob'

@@ -20,7 +20,7 @@ const Login = () => {
             params.append('username', formData.username);
             params.append('password', formData.password);
 
-            const res = await API.post('token', params);
+           const res = await API.post('/token', params);
             localStorage.setItem('token', res.data.access_token);
             navigate('/dashboard');
             // Force reload to update app state (simple auth)
