@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileSpreadsheet, Download, Filter, CheckCircle } from 'lucide-react';
-// import axios from 'axios';
-import API from "../api";
+import axios from 'axios';
 
 const ExportPage = () => {
     const [filters, setFilters] = useState({
@@ -34,8 +33,8 @@ const ExportPage = () => {
             //     params,
             //     responseType: 'blob' // Important for files
             // });
-            const response = await API.get(
-                '/api/export/download',
+            const response = await axios.get(
+                'http://localhost:8000/api/export/download',
                 {
                     params,
                     responseType: 'blob'

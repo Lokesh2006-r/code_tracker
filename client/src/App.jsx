@@ -6,6 +6,7 @@ import DepartmentDetails from './pages/DepartmentDetails';
 import StudentProfile from './pages/StudentProfile';
 import ExportPage from './pages/ExportPage';
 import Login from './pages/Login';
+import StudentsLeaderboard from './pages/StudentsLeaderboard'; // New import
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -70,6 +71,7 @@ function App() {
                 <Route path="/department" element={<Department />} />
                 <Route path="/department/:deptName" element={<DepartmentDetails />} />
                 <Route path="/student/:regNo" element={<StudentProfile />} />
+                <Route path="/students" element={<StudentsLeaderboard />} />
                 <Route path="/export" element={<ExportPage />} />
               </Routes>
             </Layout>

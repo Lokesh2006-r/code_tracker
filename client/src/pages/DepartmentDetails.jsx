@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronRight, Code, Trophy, Search, Trash2, Pencil } from 'lucide-react';
-import API from "../api";
+import axios from 'axios';
 import AddStudentModal from '../components/AddStudentModal';
 
 const StudentRow = ({ student, idx, onDelete, onEdit }) => {
@@ -66,8 +66,13 @@ const DepartmentDetails = () => {
     useEffect(() => {
         const fetchStudents = async () => {
             try {
-                const res = await API.get(`/api/students/?department=${deptName}`);
-                setStudents(res.data);
+                const res = await axios.get(`http://localhost:8000/api/students/?department=${deptName}`);
+                const sortedData = (Array.isArray(res.data) ? res.data : []).sort((a, b) => {
+                    const regA = String(a.reg_no || "").toLowerCase();
+                    const regB = String(b.reg_no || "").toLowerCase();
+                    return regA.localeCompare(regB, undefined, { numeric: true, sensitivity: 'base' });
+                });
+                setStudents(sortedData);
             } catch (err) {
                 console.error("Failed to fetch department students", err);
             } finally {
@@ -81,7 +86,7 @@ const DepartmentDetails = () => {
         if (!window.confirm(`Are you sure you want to delete student ${regNo}?`)) return;
 
         try {
-            await API.delete(`/students/${regNo}`);
+            await axios.delete(`http://localhost:8000/api/students/${regNo}`);
             setStudents(prev => prev.filter(s => s.reg_no !== regNo));
         } catch (err) {
             alert("Failed to delete student");
@@ -121,10 +126,10 @@ const DepartmentDetails = () => {
                     <tbody>
                         {loading ? (
                             <tr><td colSpan="6" className="py-8 text-center text-zinc-500">Loading data...</td></tr>
-                        ) : students.length === 0 ? (
+                        ) : (students.length === 0) ? (
                             <tr><td colSpan="6" className="py-8 text-center text-zinc-500">No students found in this department.</td></tr>
                         ) : (
-                            students.map((student, idx) => (
+                            Array.isArray(students) && students.map((student, idx) => (
                                 <StudentRow
                                     key={student.reg_no}
                                     student={student}
@@ -144,7 +149,7 @@ const DepartmentDetails = () => {
                 onAdd={() => {
                     // Refresh list
                     const fetchStudents = async () => {
-                        const res = await API.get(`/api/students/?department=${deptName}`);
+                        const res = await axios.get(`http://localhost:8000/api/students/?department=${deptName}`);
                         setStudents(res.data);
                     };
                     fetchStudents();

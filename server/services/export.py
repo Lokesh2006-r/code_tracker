@@ -16,6 +16,12 @@ class ExportService:
 
         students = list(db.get_db()["students"].find(query))
         
+        # Sort by Reg No (case-insensitive alphanumeric sort)
+        try:
+             students.sort(key=lambda s: s.get("reg_no", "").lower())
+        except:
+             pass
+        
         output = io.BytesIO()
         
         # --- Contest Report Mode ---

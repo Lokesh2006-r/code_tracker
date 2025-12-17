@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Plus, Users, ChevronRight, Code } from 'lucide-react';
 import AddStudentModal from '../components/AddStudentModal';
 
-const DepartmentCard = ({ id, name, students, icon: Icon, color, onAddStudent }) => (
+const DepartmentCard = ({ id, name, students, avg_solved, icon: Icon, color, onAddStudent }) => (
     <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -31,7 +31,7 @@ const DepartmentCard = ({ id, name, students, icon: Icon, color, onAddStudent })
             <h3 className="text-2xl font-bold text-white mb-2">{name}</h3>
             <div className="flex items-center gap-4 text-zinc-400 text-sm font-medium">
                 <span className="flex items-center gap-1"><Users size={16} /> {students} Students</span>
-                <span className="flex items-center gap-1"><Code size={16} /> Avg 450 Solved</span>
+                <span className="flex items-center gap-1"><Code size={16} /> Avg {avg_solved || 0} Solved</span>
             </div>
 
             <div className="mt-6 pt-6 border-t border-white/10 flex items-center justify-between text-zinc-300 group-hover:text-white group-hover:translate-x-2 transition-all">
@@ -43,15 +43,55 @@ const DepartmentCard = ({ id, name, students, icon: Icon, color, onAddStudent })
     </motion.div>
 );
 
+import axios from 'axios';
+
 const Department = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [departments, setDepartments] = useState([]);
 
-    const departments = [
-        { id: 'CSE', name: 'Computer Science', students: 450, icon: Code, color: 'text-zinc-200' },
-        { id: 'ECE', name: 'Electronics', students: 320, icon: Code, color: 'text-zinc-400' },
-        { id: 'IT', name: 'Information Tech', students: 280, icon: Code, color: 'text-zinc-300' },
-        { id: 'AI', name: 'Artificial Intelligence', students: 150, icon: Code, color: 'text-zinc-500' },
-    ];
+    const getDeptName = (id) => {
+        const names = {
+            'CSE': 'Computer Science',
+            'ECE': 'Electronics',
+            'IT': 'Information Tech',
+            'AI': 'Artificial Intelligence',
+            'EEE': 'Electrical & Electronics',
+            'MECH': 'Mechanical',
+            'CIVIL': 'Civil',
+        };
+        return names[id] || id;
+    };
+
+    const getDeptColor = (id) => {
+        const colors = {
+            'CSE': 'text-zinc-200',
+            'ECE': 'text-zinc-400',
+            'IT': 'text-zinc-300',
+            'AI': 'text-zinc-500',
+        };
+        return colors[id] || 'text-zinc-400';
+    };
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await axios.get('http://localhost:8000/api/dashboard/stats');
+                const stats = res.data.department_stats || [];
+                const formatted = stats.map(d => ({
+                    id: d.id,
+                    name: getDeptName(d.id),
+                    students: d.students,
+                    avg_solved: d.avg_solved,
+                    icon: Code,
+                    color: getDeptColor(d.id)
+                }));
+                setDepartments(formatted);
+            } catch (err) {
+                console.error("Failed department stats", err);
+            }
+        };
+        fetchStats();
+    }, []);
 
     const handleAddStudent = () => {
         // Refresh list or show success toast

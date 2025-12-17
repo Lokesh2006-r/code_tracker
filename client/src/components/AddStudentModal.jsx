@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import API from "../api";
+import axios from 'axios';
 
 const AddStudentModal = ({ isOpen, onClose, onAdd, studentToEdit = null }) => {
     const [formData, setFormData] = useState({
@@ -58,7 +58,7 @@ const AddStudentModal = ({ isOpen, onClose, onAdd, studentToEdit = null }) => {
         setError(null);
         setVerification(null);
         try {
-            const res = await API.post('api/students/verify-profiles', formData.handles);
+            const res = await axios.post('http://localhost:8000/api/students/verify-profiles', formData.handles);
             setVerification(res.data);
         } catch (err) {
             setError("Failed to verify profiles. Check backend connection.");
@@ -70,9 +70,9 @@ const AddStudentModal = ({ isOpen, onClose, onAdd, studentToEdit = null }) => {
     const handleSave = async () => {
         try {
             if (studentToEdit) {
-                await API.put(`api/students/${studentToEdit.reg_no}`, formData);
+                await axios.put(`http://localhost:8000/api/students/${studentToEdit.reg_no}`, formData);
             } else {
-                await API.post('api/students/', formData);
+                await axios.post('http://localhost:8000/api/students/', formData);
             }
             onAdd();
             onClose();
