@@ -88,6 +88,16 @@ class CodeChefService:
                 if match_contest:
                     contests = int(match_contest.group(1))
 
+                # History (Scrape script tag)
+                history = []
+                try:
+                    match_history = re.search(r"var all_rating = (\[.*?\]);", response.text, re.DOTALL)
+                    if match_history:
+                        import json
+                        history = json.loads(match_history.group(1))
+                except Exception as he:
+                    print(f"CC History parse error: {he}")
+
                 return {
                     "platform": "CodeChef",
                     "username": username,
@@ -98,7 +108,8 @@ class CodeChefService:
                     "max_rating": max_rating,
                     "division": division,
                     "solved": solved,
-                    "contests": contests
+                    "contests": contests,
+                    "history": history
                 }
             except Exception as e:
                 print(f"Error fetching CodeChef for {username}: {e}")

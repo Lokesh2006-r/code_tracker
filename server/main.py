@@ -12,14 +12,16 @@ app = FastAPI(
 def read_root():
     return {"status": "online", "message": "Student Performance Tracker API is running"}
 
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-    "http://localhost:5175",
-    "http://127.0.0.1:5175",
-]
+# origins = [
+#     "http://localhost:5173",
+#     "http://127.0.0.1:5173",
+#     "http://localhost:5174",
+#     "http://127.0.0.1:5174",
+#     "http://localhost:5175",
+#     "http://127.0.0.1:5175",
+# ]
+
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,7 +36,7 @@ from auth import routes as auth_routes
 from services.scheduler import start_scheduler, shutdown_scheduler
 from database import db
 
-app.include_router(auth_routes.router, tags=["Authentication"])
+app.include_router(auth_routes.router, prefix="/api", tags=["Authentication"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(students.router, prefix="/api/students", tags=["Students"])
 app.include_router(export.router, prefix="/api/export", tags=["Export"])

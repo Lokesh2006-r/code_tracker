@@ -1,56 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, Code, Trophy, Search, Trash2, Pencil } from 'lucide-react';
+import { ChevronRight, Code, Search, Trash2, Pencil, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import AddStudentModal from '../components/AddStudentModal';
 
+// ✅ API base URL from env
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 const StudentRow = ({ student, idx, onDelete, onEdit }) => {
-    // Summing solved count from all platforms
-    const totalSolved = (
+    const totalSolved =
         (student.stats?.leetcode?.total_solved || 0) +
         (student.stats?.codechef?.solved || 0) +
         (student.stats?.codeforces?.solved || 0) +
-        (student.stats?.hackerrank?.solved || 0)
-    );
+        (student.stats?.hackerrank?.solved || 0);
 
     return (
         <motion.tr
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="border-b border-white/5 hover:bg-white/5 transition-colors"
+            className="border-b border-white/5 hover:bg-white/5"
         >
-            <td className="py-4 px-4 text-white font-medium">{student.reg_no}</td>
-            <td className="py-4 px-4 text-white hover:text-zinc-300">
-                <Link to={`/student/${student.reg_no}`}>{student.name}</Link>
+            <td className="py-4 px-4 text-white">{student.reg_no}</td>
+            <td className="py-4 px-4 text-white">
+                <Link to={`/student/${student.reg_no}`} className="hover:underline">
+                    {student.name}
+                </Link>
             </td>
             <td className="py-4 px-4 text-zinc-400">{student.year}</td>
             <td className="py-4 px-4 text-white font-mono">{totalSolved}</td>
             <td className="py-4 px-4">
-                <span className={`px-2 py-1 rounded text-xs border ${totalSolved > 500 ? 'bg-white/10 text-white border-white/20' :
-                    totalSolved > 200 ? 'bg-zinc-500/10 text-zinc-300 border-zinc-500/20' :
-                        'bg-zinc-800/50 text-zinc-500 border-zinc-800'
-                    }`}>
+                <span className={`px-2 py-1 rounded text-xs ${
+                    totalSolved > 500
+                        ? 'bg-white/10 text-white'
+                        : totalSolved > 200
+                        ? 'bg-zinc-500/10 text-zinc-300'
+                        : 'bg-zinc-800/50 text-zinc-500'
+                }`}>
                     {totalSolved > 500 ? 'Expert' : totalSolved > 200 ? 'Intermediate' : 'Beginner'}
                 </span>
             </td>
-            <td className="py-4 px-4 text-right flex justify-end gap-2">
-                <button
-                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
-                    title="Edit Student"
-                >
+            <td className="py-4 px-4 flex justify-end gap-2">
+                <button onClick={onEdit} className="p-2 bg-zinc-800 rounded-lg">
                     <Pencil size={16} />
                 </button>
-                <Link to={`/student/${student.reg_no}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition-colors inline-block">
+                <Link to={`/student/${student.reg_no}`} className="p-2 bg-white/5 rounded-lg">
                     <ChevronRight size={16} />
                 </Link>
-                <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="p-2 rounded-lg bg-red-900/20 hover:bg-red-900/40 text-red-400 transition-colors"
-                    title="Delete Student"
-                >
+                <button onClick={onDelete} className="p-2 bg-red-900/30 text-red-400 rounded-lg">
                     <Trash2 size={16} />
                 </button>
             </td>
@@ -62,80 +60,120 @@ const DepartmentDetails = () => {
     const { deptName } = useParams();
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [editingStudent, setEditingStudent] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
 
-    useEffect(() => {
-        const fetchStudents = async () => {
-            try {
-                const res = await axios.get(`http://localhost:8000/api/students/?department=${deptName}`);
-                const sortedData = (Array.isArray(res.data) ? res.data : []).sort((a, b) => {
-                    const regA = String(a.reg_no || "").toLowerCase();
-                    const regB = String(b.reg_no || "").toLowerCase();
-                    return regA.localeCompare(regB, undefined, { numeric: true, sensitivity: 'base' });
-                });
-                setStudents(sortedData);
-            } catch (err) {
-                console.error("Failed to fetch department students", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchStudents();
-    }, [deptName]);
+    const loadStudents = async () => {
+        try {
+            const res = await axios.get(
+                `${API_BASE_URL}/api/students/?department=${deptName}`
+            );
+            const sorted = (res.data || []).sort((a, b) =>
+                String(a.reg_no).localeCompare(String(b.reg_no), undefined, { numeric: true })
+            );
+            setStudents(sorted);
+        } catch (err) {
+            console.error("Failed to fetch department students", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        if (refreshing) return;
+        if (!window.confirm("Verify and refresh all students in this department?")) return;
+
+        setRefreshing(true);
+        try {
+            await axios.post(
+                `${API_BASE_URL}/api/students/refresh-department?department=${deptName}`
+            );
+            await loadStudents();
+        } catch {
+            alert("Failed to refresh data");
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const handleDelete = async (regNo) => {
-        if (!window.confirm(`Are you sure you want to delete student ${regNo}?`)) return;
+        if (!window.confirm(`Delete student ${regNo}?`)) return;
 
         try {
-            await axios.delete(`http://localhost:8000/api/students/${regNo}`);
+            await axios.delete(
+                `${API_BASE_URL}/api/students/${regNo}`
+            );
             setStudents(prev => prev.filter(s => s.reg_no !== regNo));
-        } catch (err) {
+        } catch {
             alert("Failed to delete student");
         }
     };
 
-    const [editingStudent, setEditingStudent] = useState(null);
+    useEffect(() => {
+        loadStudents();
+    }, [deptName]);
+
+    const filteredStudents = students.filter(s =>
+        s.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.reg_no?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-1">{deptName} Department</h1>
+                    <h1 className="text-3xl font-bold text-white">{deptName} Department</h1>
                     <p className="text-zinc-400">Performance Overview</p>
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                    <input
-                        placeholder="Search student..."
-                        className="pl-10 pr-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-white outline-none focus:border-white/30 hover:bg-zinc-800 transition-colors w-64"
-                    />
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex gap-2"
+                    >
+                        <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+                        {refreshing ? "Verifying..." : "Verify & Refresh"}
+                    </button>
+
+                    <div className="relative">
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        <input
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            placeholder="Search student..."
+                            className="pl-10 pr-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-white"
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className="glass-card overflow-hidden border border-white/10 bg-black/40">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-white/5 border-b border-white/10 text-xs uppercase tracking-wider text-zinc-500">
-                            <th className="py-4 px-4 font-semibold">Reg No</th>
-                            <th className="py-4 px-4 font-semibold">Name</th>
-                            <th className="py-4 px-4 font-semibold">Year</th>
-                            <th className="py-4 px-4 font-semibold">Problems Solved</th>
-                            <th className="py-4 px-4 font-semibold">Status</th>
-                            <th className="py-4 px-4 font-semibold text-right">Actions</th>
+            <div className="glass-card border border-white/10 overflow-hidden">
+                <table className="w-full">
+                    <thead className="bg-white/5 text-zinc-500 text-xs uppercase">
+                        <tr>
+                            <th className="px-4 py-3">Reg No</th>
+                            <th className="px-4 py-3">Name</th>
+                            <th className="px-4 py-3">Year</th>
+                            <th className="px-4 py-3">Solved</th>
+                            <th className="px-4 py-3">Status</th>
+                            <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="6" className="py-8 text-center text-zinc-500">Loading data...</td></tr>
-                        ) : (students.length === 0) ? (
-                            <tr><td colSpan="6" className="py-8 text-center text-zinc-500">No students found in this department.</td></tr>
+                            <tr><td colSpan="6" className="text-center py-8 text-zinc-500">Loading...</td></tr>
+                        ) : filteredStudents.length === 0 ? (
+                            <tr><td colSpan="6" className="text-center py-8 text-zinc-500">No students found</td></tr>
                         ) : (
-                            Array.isArray(students) && students.map((student, idx) => (
+                            filteredStudents.map((student, idx) => (
                                 <StudentRow
                                     key={student.reg_no}
                                     student={student}
                                     idx={idx}
-                                    onDelete={() => handleDelete(student.reg_no)}
                                     onEdit={() => setEditingStudent(student)}
+                                    onDelete={() => handleDelete(student.reg_no)}
                                 />
                             ))
                         )}
@@ -146,16 +184,11 @@ const DepartmentDetails = () => {
             <AddStudentModal
                 isOpen={!!editingStudent}
                 onClose={() => setEditingStudent(null)}
+                studentToEdit={editingStudent}
                 onAdd={() => {
-                    // Refresh list
-                    const fetchStudents = async () => {
-                        const res = await axios.get(`http://localhost:8000/api/students/?department=${deptName}`);
-                        setStudents(res.data);
-                    };
-                    fetchStudents();
+                    loadStudents();
                     setEditingStudent(null);
                 }}
-                studentToEdit={editingStudent}
             />
         </div>
     );

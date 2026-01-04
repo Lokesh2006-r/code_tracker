@@ -110,3 +110,39 @@ async def get_students(department: str = None):
         query["department"] = department
     students = list(db.get_db()["students"].find(query))
     return [fix_id(s) for s in students]
+
+
+@router.post("/refresh-department")
+async def refresh_department_stats(department: str):
+    """
+    Refreshes stats for all students in the given department.
+    """
+    students = list(db.get_db()["students"].find({"department": department}))
+    if not students:
+        raise HTTPException(status_code=404, detail="No students found in this department")
+    
+    updated_count = 0
+    
+    # Process sequentially to avoid rate limits (or use a semaphore if we want parallelism)
+    for student in students:
+        reg_no = student.get("reg_no")
+        handles = student.get("handles", {})
+        
+        if not handles:
+            continue
+            
+        try:
+            # Re-verify/fetch stats
+            new_stats = await PlatformAggregator.verify_profile(handles)
+            
+            if new_stats:
+                db.get_db()["students"].update_one(
+                    {"reg_no": reg_no},
+                    {"$set": {"stats": new_stats}}
+                )
+                updated_count += 1
+        except Exception as e:
+            print(f"Failed to refresh student {reg_no}: {e}")
+            continue
+            
+    return {"message": f"Refreshed stats for {updated_count} students", "total": len(students)}

@@ -7,7 +7,9 @@ from datetime import datetime
 class ExportService:
     @staticmethod
     @staticmethod
-    def generate_excel(department: str = None, year: int = None, platform: str = None, contest_name: str = None, contest_date: str = None):
+    async def generate_excel(department: str = None, year: int = None, platform: str = None, contest_name: str = None, contest_date: str = None):
+        from .platforms.codeforces import CodeforcesService  # Import here to avoid circular dep if any
+        
         query = {}
         if department and department != "All":
             query["department"] = department
@@ -29,6 +31,24 @@ class ExportService:
             data = []
             selected_platform = platform.lower()
             
+            # --- Codeforces Live Fetch Logic ---
+            cf_standings = None
+            cf_problems = None
+            if selected_platform == "codeforces" and contest_name.isdigit():
+                 # Valid Contest ID, try fetching live data
+                 handles = [s.get("handles", {}).get("codeforces") for s in students if s.get("handles", {}).get("codeforces")]
+                 handles = [h for h in handles if h] # Filter None
+                 
+                 cf_rows, cf_probs = await CodeforcesService.get_contest_standings(contest_name, handles)
+                 if cf_rows:
+                     # Map by handle (lowercase)
+                     cf_standings = {}
+                     for r in cf_rows:
+                         for m in r["party"]["members"]:
+                             h_low = m["handle"].lower()
+                             cf_standings[h_low] = r
+                     cf_problems = cf_probs
+
             for idx, s in enumerate(students, 1):
                 base_info = {
                     "S. No": idx,
@@ -45,10 +65,13 @@ class ExportService:
                     
                     if contest_name:
                         # Fuzzy match or exact match contest name
-                        # Title format example: "Weekly Contest 300"
-                        clean_name = contest_name.lower().replace(" ", "")
+                        # Standardize: lowercase, remove spaces, hyphens, underscores
+                        def clean_str(s):
+                            return str(s).lower().replace(" ", "").replace("-", "").replace("_", "").replace(".", "")
+                            
+                        clean_name = clean_str(contest_name)
                         for h in history:
-                            c_title = h.get("contest", {}).get("title", "").lower().replace(" ", "")
+                            c_title = clean_str(h.get("contest", {}).get("title", ""))
                             if clean_name in c_title:
                                 contest_stats = h
                                 break
@@ -82,24 +105,91 @@ class ExportService:
                         "Top %": top_percent_str
                     }
                 elif selected_platform == "codeforces":
-                    row = {
-                        **base_info,
-                        "Current Rating": stats.get("rating", 0),
-                        "Max Rating": stats.get("max_rating", 0),
-                        "Current Rank": stats.get("rank", "Unrated"),
-                        "Max Rank": stats.get("max_rank", "Unrated"),
-                        "Problems Count": stats.get("solved", 0),
-                        "Total Contest Attend": stats.get("contests", 0)
-                    }
+                    # Check if we have live data
+                    unique_cf_row = None
+                    if cf_standings:
+                        handle = s.get("handles", {}).get("codeforces", "").lower()
+                        unique_cf_row = cf_standings.get(handle)
+                    
+                    if unique_cf_row:
+                        # Use Live Data
+                        points = unique_cf_row.get("points", 0)
+                        rank = unique_cf_row.get("rank", 0)
+                        penalty = unique_cf_row.get("penalty", 0)
+                        
+                        # Calculate solved count from problemResults
+                        solved_cnt = 0
+                        problem_results = unique_cf_row.get("problemResults", [])
+                        
+                        row = {
+                            **base_info,
+                            "Rank": rank,
+                            "Points": points,
+                            "Penalty": penalty
+                        }
+                        
+                        # Add dynamic problem columns
+                        if cf_problems:
+                            for i, p in enumerate(cf_problems):
+                                p_idx = p.get("index", str(i))
+                                res = problem_results[i] if i < len(problem_results) else {}
+                                points_got = res.get("points", 0)
+                                if points_got > 0:
+                                    row[p_idx] = points_got
+                                    solved_cnt += 1
+                                else:
+                                    row[p_idx] = 0
+                        
+                        row["Total Solved"] = solved_cnt
+                        
+                    else:
+                        # Fallback to stored history
+                        history = stats.get("history", [])
+                        contest_stats = None
+                        if contest_name:
+                                def clean_str(s):
+                                    return str(s).lower().replace(" ", "").replace("-", "").replace("_", "").replace(".", "")
+
+                                clean_name = clean_str(contest_name)
+                                for h in history:
+                                    # Check Contest Name
+                                    c_title = clean_str(h.get("contestName", ""))
+                                    # Check Contest ID
+                                    c_id = str(h.get("contestId", ""))
+                                    
+                                    if clean_name in c_title or clean_name == c_id:
+                                        contest_stats = h
+                                        break
+
+                        row = {
+                            **base_info,
+                            "Contest Rank": contest_stats.get("rank", "Absent") if contest_stats else "Absent",
+                            "Rating After": contest_stats.get("newRating", "Absent") if contest_stats else "Absent",
+                            "Rating Change": (contest_stats.get("newRating", 0) - contest_stats.get("oldRating", 0)) if contest_stats else "-",
+                            "Current Rating": stats.get("rating", 0),
+                            "Total Solved": stats.get("solved", 0)
+                        }
+                        
                 elif selected_platform == "codechef":
+                     history = stats.get("history", [])
+                     contest_stats = None
+                     if contest_name:
+                         clean_name = contest_name.lower().replace(" ", "")
+                         for h in history:
+                             # Codechef history has 'name' (e.g. Starters 100) and 'code' (e.g. START100)
+                             c_title = h.get("name", "").lower().replace(" ", "")
+                             c_code = h.get("code", "").lower()
+                             if clean_name in c_title or clean_name in c_code:
+                                 contest_stats = h
+                                 break
+                    
                      row = {
                         **base_info,
-                        "Total Questions Solved": stats.get("solved", 0),
-                        "Division": stats.get("division", "N/A"),
-                        "Rating": stats.get("rating", 0),
-                        "Max Rating": stats.get("max_rating", 0),
+                        "Contest Rank": contest_stats.get("rank", "Absent") if contest_stats else "Absent",
+                        "Contest Rating": contest_stats.get("rating", "Absent") if contest_stats else "Absent",
+                        "Current Rating": stats.get("rating", 0),
                         "Global Rank": stats.get("global_rank", "N/A"),
-                        "Country Rank": stats.get("country_rank", "N/A"),
+                        "Total Solved": stats.get("solved", 0)
                     }
                 else:
                     # Default/HackerRank
@@ -116,9 +206,9 @@ class ExportService:
                 if selected_platform == "leetcode":
                     cols = ["S. No", "Register Number", "Name of the Student", "Leet Code Easy", "Leet Code Medium", "Leet code Hard", "Total", "Contest count", "Contest Rating", "Global Rank", "Top %"]
                 elif selected_platform == "codeforces":
-                    cols = ["S. No", "Register Number", "Name of the Student", "Current Rating", "Max Rating", "Current Rank", "Max Rank", "Problems Count", "Total Contest Attend"]
+                    cols = ["S. No", "Register Number", "Name of the Student", "Contest Rank", "Rating After", "Rating Change", "Current Rating", "Total Solved"]
                 elif selected_platform == "codechef":
-                    cols = ["S. No", "Register Number", "Name of the Student", "Total Questions Solved", "Division", "Rating", "Max Rating", "Global Rank", "Country Rank"]
+                    cols = ["S. No", "Register Number", "Name of the Student", "Contest Rank", "Contest Rating", "Current Rating", "Global Rank", "Total Solved"]
                 else:
                     cols = ["S. No", "Register Number", "Name of the Student", "Badges", "Solved"]
                 df = pd.DataFrame(columns=cols)
@@ -211,7 +301,7 @@ class ExportService:
                 "Rating": cf.get("rating", 0),
                 "Max Rating": cf.get("max_rating", 0),
                 "Rank": cf.get("rank", "Unrated"),
-                "Solved": cf.get("solved", 0),
+                "Total Solved": cf.get("solved", 0),
                 "Contests": cf.get("contests", 0)
             }
             cf_data.append(cf_row)

@@ -14,7 +14,7 @@ async def download_report(
     contest_date: str = Query(None)
 ):
     try:
-        excel_file = ExportService.generate_excel(department, year, platform, contest_name, contest_date)
+        excel_file = await ExportService.generate_excel(department, year, platform, contest_name, contest_date)
         
         filename = f"Performance_Report_{datetime.now().strftime('%Y%m%d')}.xlsx"
         
