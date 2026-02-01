@@ -104,7 +104,7 @@ const AddStudentModal = ({ isOpen, onClose, onAdd, studentToEdit = null }) => {
 
                     <div className="p-6 space-y-6">
                         {/* Basic Info */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input name="name" value={formData.name} placeholder="Full Name" onChange={handleChange} className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-blue-500 outline-none" />
                             <input name="reg_no" value={formData.reg_no} placeholder="Register Number" onChange={handleChange} className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-blue-500 outline-none" disabled={!!studentToEdit} />
                             <select name="department" value={formData.department} onChange={handleChange} className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-blue-500 outline-none">
@@ -123,7 +123,7 @@ const AddStudentModal = ({ isOpen, onClose, onAdd, studentToEdit = null }) => {
                         {/* Handles */}
                         <div className="space-y-3">
                             <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Platform Handles</h3>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <input name="handle_leetcode" value={formData.handles.leetcode} placeholder="LeetCode Username" onChange={handleChange} className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-yellow-500 outline-none" />
                                 <input name="handle_codeforces" value={formData.handles.codeforces} placeholder="Codeforces Username" onChange={handleChange} className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-500 outline-none" />
                                 <input name="handle_codechef" value={formData.handles.codechef} placeholder="CodeChef Username" onChange={handleChange} className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-orange-900 outline-none" />
@@ -137,7 +137,7 @@ const AddStudentModal = ({ isOpen, onClose, onAdd, studentToEdit = null }) => {
                                 <h4 className="text-green-400 font-bold mb-2 flex items-center gap-2">
                                     <CheckCircle size={18} /> Verification Successful
                                 </h4>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                     {verification.leetcode && (
                                         <div>
                                             <span className="text-slate-400">LeetCode:</span>

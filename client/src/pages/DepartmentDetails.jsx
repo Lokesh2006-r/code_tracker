@@ -31,13 +31,12 @@ const StudentRow = ({ student, idx, onDelete, onEdit }) => {
             <td className="py-4 px-4 text-zinc-400">{student.year}</td>
             <td className="py-4 px-4 text-white font-mono">{totalSolved}</td>
             <td className="py-4 px-4">
-                <span className={`px-2 py-1 rounded text-xs ${
-                    totalSolved > 500
-                        ? 'bg-white/10 text-white'
-                        : totalSolved > 200
+                <span className={`px-2 py-1 rounded text-xs ${totalSolved > 500
+                    ? 'bg-white/10 text-white'
+                    : totalSolved > 200
                         ? 'bg-zinc-500/10 text-zinc-300'
                         : 'bg-zinc-800/50 text-zinc-500'
-                }`}>
+                    }`}>
                     {totalSolved > 500 ? 'Expert' : totalSolved > 200 ? 'Intermediate' : 'Beginner'}
                 </span>
             </td>
@@ -53,6 +52,53 @@ const StudentRow = ({ student, idx, onDelete, onEdit }) => {
                 </button>
             </td>
         </motion.tr>
+    );
+};
+
+const MobileStudentRow = ({ student, idx, onDelete, onEdit }) => {
+    const totalSolved =
+        (student.stats?.leetcode?.total_solved || 0) +
+        (student.stats?.codechef?.solved || 0) +
+        (student.stats?.codeforces?.solved || 0) +
+        (student.stats?.hackerrank?.solved || 0);
+
+    const status = totalSolved > 500 ? 'Expert' : totalSolved > 200 ? 'Intermediate' : 'Beginner';
+    const statusColor = totalSolved > 500 ? 'bg-white/10 text-white' : totalSolved > 200 ? 'bg-zinc-500/10 text-zinc-300' : 'bg-zinc-800/50 text-zinc-500';
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className="glass-card p-4 border border-white/10 rounded-xl space-y-3 mb-3"
+        >
+            <div className="flex justify-between items-start">
+                <div>
+                    <Link to={`/student/${student.reg_no}`} className="text-white font-bold hover:underline">{student.name}</Link>
+                    <div className="text-xs text-zinc-500">{student.reg_no}</div>
+                </div>
+                <span className={`px-2 py-1 rounded text-xs ${statusColor}`}>
+                    {status}
+                </span>
+            </div>
+
+            <div className="flex justify-between items-center text-sm">
+                <div className="text-zinc-400">Year: <span className="text-white">{student.year}</span></div>
+                <div className="text-zinc-400">Solved: <span className="text-white font-mono">{totalSolved}</span></div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+                <button onClick={onEdit} className="p-2 bg-zinc-800 rounded-lg text-zinc-400 hover:text-white">
+                    <Pencil size={16} />
+                </button>
+                <button onClick={onDelete} className="p-2 bg-red-900/30 text-red-400 rounded-lg hover:bg-red-900/50">
+                    <Trash2 size={16} />
+                </button>
+                <Link to={`/student/${student.reg_no}`} className="p-2 bg-white/5 rounded-lg text-zinc-400 hover:text-white">
+                    <ChevronRight size={16} />
+                </Link>
+            </div>
+        </motion.div>
     );
 };
 
@@ -121,35 +167,56 @@ const DepartmentDetails = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">{deptName} Department</h1>
-                    <p className="text-zinc-400">Performance Overview</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">{deptName} Department</h1>
+                    <p className="text-sm md:text-base text-zinc-400">Performance Overview</p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex items-center gap-2 w-full md:w-auto">
                     <button
                         onClick={handleRefresh}
                         disabled={refreshing}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex gap-2"
+                        className="px-3 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 text-sm hover:bg-indigo-500 transition-colors whitespace-nowrap"
                     >
-                        <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
-                        {refreshing ? "Verifying..." : "Verify & Refresh"}
+                        <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+                        <span className="hidden sm:inline">{refreshing ? "Verifying..." : "Verify & Refresh"}</span>
+                        <span className="sm:hidden">{refreshing ? "..." : "Refresh"}</span>
                     </button>
 
-                    <div className="relative">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <div className="relative flex-1 md:w-64">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                         <input
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Search student..."
-                            className="pl-10 pr-4 py-2 bg-zinc-900 border border-white/10 rounded-lg text-white"
+                            placeholder="Search..."
+                            className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500/50"
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="glass-card border border-white/10 overflow-hidden">
+            {/* Mobile View */}
+            <div className="md:hidden">
+                {loading ? (
+                    <div className="text-center py-8 text-zinc-500">Loading...</div>
+                ) : filteredStudents.length === 0 ? (
+                    <div className="text-center py-8 text-zinc-500">No students found</div>
+                ) : (
+                    filteredStudents.map((student, idx) => (
+                        <MobileStudentRow
+                            key={student.reg_no}
+                            student={student}
+                            idx={idx}
+                            onEdit={() => setEditingStudent(student)}
+                            onDelete={() => handleDelete(student.reg_no)}
+                        />
+                    ))
+                )}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden md:block glass-card border border-white/10 overflow-hidden">
                 <table className="w-full">
                     <thead className="bg-white/5 text-zinc-500 text-xs uppercase">
                         <tr>

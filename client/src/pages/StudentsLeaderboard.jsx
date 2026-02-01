@@ -13,6 +13,52 @@ const RankBadge = ({ rank }) => {
     return <span className="text-zinc-500 font-mono font-bold">#{rank}</span>;
 };
 
+const MobileStudentCard = ({ student, idx }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: idx * 0.03 }}
+        className="glass-card p-4 border border-white/10 rounded-xl space-y-3 mb-3"
+    >
+        <div className="flex justify-between items-start">
+            <div className="flex items-center gap-3">
+                <RankBadge rank={idx + 1} />
+                <div>
+                    <div className="text-white font-bold">{student.name}</div>
+                    <div className="text-xs text-zinc-500">{student.reg_no}</div>
+                </div>
+            </div>
+            <div className="text-right">
+                <div className="text-purple-400 font-bold text-lg">{student.weightedScore}</div>
+                <div className="text-xs text-zinc-500">Score</div>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 text-center text-xs mt-2 bg-white/5 p-2 rounded-lg">
+            <div>
+                <div className="text-white font-bold">{student.totalSolved}</div>
+                <div className="text-zinc-500">Total</div>
+            </div>
+            <div>
+                <div className="text-emerald-400 font-bold">{student.lcEasy}</div>
+                <div className="text-zinc-500">Easy</div>
+            </div>
+            <div>
+                <div className="text-amber-400 font-bold">{student.lcMedium}</div>
+                <div className="text-zinc-500">Med</div>
+            </div>
+            <div>
+                <div className="text-red-400 font-bold">{student.lcHard}</div>
+                <div className="text-zinc-500">Hard</div>
+            </div>
+        </div>
+        <div className="flex justify-between text-xs text-zinc-400 pt-2 border-t border-white/10">
+            <span>Dept: {student.dept}</span>
+            <span>LC Rating: {student.lcRating || '-'}</span>
+        </div>
+    </motion.div>
+);
+
 const StudentsLeaderboard = () => {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -109,18 +155,31 @@ const StudentsLeaderboard = () => {
                     <button
                         key={cat}
                         onClick={() => setDepartmentFilter(cat)}
-                        className={`px-4 py-1.5 rounded-full text-sm ${
-                            departmentFilter === cat
+                        className={`px-4 py-1.5 rounded-full text-sm ${departmentFilter === cat
                                 ? 'bg-white text-black'
                                 : 'bg-zinc-900 text-zinc-400 border border-white/10'
-                        }`}
+                            }`}
                     >
                         {cat}
                     </button>
                 ))}
             </div>
 
-            <div className="glass-card border border-white/10 overflow-x-auto">
+            {/* Mobile View */}
+            <div className="md:hidden">
+                {loading ? (
+                    <div className="text-center py-8 text-zinc-500">Loading leaderboard...</div>
+                ) : filteredStudents.length === 0 ? (
+                    <div className="text-center py-8 text-zinc-500">No students found</div>
+                ) : (
+                    filteredStudents.map((student, idx) => (
+                        <MobileStudentCard key={student.reg_no} student={student} idx={idx} />
+                    ))
+                )}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden md:block glass-card border border-white/10 overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="bg-white/5 text-xs uppercase text-zinc-500">
                         <tr>

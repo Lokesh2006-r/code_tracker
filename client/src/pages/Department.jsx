@@ -96,15 +96,15 @@ const Department = () => {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Departments</h1>
-                    <p className="text-zinc-400">Manage students by department</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white">Departments</h1>
+                    <p className="text-sm md:text-base text-zinc-400">Manage students by department</p>
                 </div>
 
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-white text-black rounded-lg flex items-center gap-2"
+                    className="self-start md:self-auto px-3 py-2 bg-white text-black rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-zinc-200 transition-colors"
                 >
                     <Plus size={18} />
                     Add Student
@@ -124,7 +124,7 @@ const Department = () => {
             <AddStudentModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onAdd={() => {}}
+                onAdd={() => { }}
             />
         </div>
     );

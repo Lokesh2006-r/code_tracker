@@ -81,7 +81,8 @@ import {
   GraduationCap,
   FileSpreadsheet,
   LogOut,
-  Code2
+  Code2,
+  Calendar
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
@@ -179,6 +180,7 @@ const Sidebar = ({ onClose }) => {
         <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={onClose} />
         <NavItem to="/department" icon={Users} label="Departments" onClick={onClose} />
         <NavItem to="/students" icon={GraduationCap} label="Students" onClick={onClose} />
+        <NavItem to="/contests" icon={Calendar} label="Contests" onClick={onClose} />
         <NavItem to="/export" icon={FileSpreadsheet} label="Export Data" onClick={onClose} />
       </nav>
 

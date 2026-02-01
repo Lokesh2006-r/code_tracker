@@ -67,3 +67,10 @@ async def get_dashboard_stats():
         "inactive_students": zero_solvers,
         "active_contests": 2
     }
+from services.contests import ContestService
+
+@router.get("/contests")
+async def get_upcoming_contests():
+    return await ContestService.get_upcoming()
+
+# End of file
